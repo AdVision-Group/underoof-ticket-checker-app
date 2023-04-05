@@ -1,21 +1,26 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
 import React from 'react';
-import {SafeAreaView, StyleSheet} from 'react-native';
-
-import {Counter} from './src/components/Counter';
+import {NavigationContainer} from '@react-navigation/native';
 import QrScanScreen from './src/screens/QrScanScreen';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import SelectEventScreen from './src/screens/SelectEventScreen';
+import LoginScreen from './src/screens/LoginScreen';
+
+const Stack = createNativeStackNavigator();
 
 function App(): JSX.Element {
   return (
-    <SafeAreaView>
-      <QrScanScreen />
-    </SafeAreaView>
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="SelectEvent"
+        screenOptions={{
+          headerShown: false,
+          orientation: 'portrait',
+        }}>
+        <Stack.Screen name="SelectEvent" component={SelectEventScreen} />
+        <Stack.Screen name="QrScanScreen" component={QrScanScreen} />
+        <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
