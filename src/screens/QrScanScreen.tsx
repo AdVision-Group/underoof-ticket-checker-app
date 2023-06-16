@@ -1,93 +1,98 @@
-import {useEffect, useState} from 'react';
-import {BarCodeReadEvent, RNCamera} from 'react-native-camera';
-import {requestCameraPermission} from '../permissions';
-import {Alert, Text} from 'react-native';
 import styled from 'styled-components/native';
-import {decode} from 'base-64';
+import UnderoofQrScanner from '../components/UnderoofQrScanner/component';
+import {colors} from '../styles';
+import {useContext, useEffect, useState} from 'react';
+import {AuthContext} from '../contextWrappers/AuthContext/context';
+import {CheckTicketResult} from '../components/UnderoofQrScanner/api';
 
-type UnderoofQrScanResult = {
-  saleUuid: string;
-  ticketCode: string;
-};
+import {useCountdown} from 'usehooks-ts';
+import QrStatus from '../components/QrStatus/component';
+import {isApiError} from '../api';
+import {getStatusFromResult} from '../components/QrStatus/services';
 
-function decodeBase64(base64: string): string | null {
-  try {
-    return decode(base64);
-  } catch (e) {
-    console.log('Error decoding base64', e);
-    return null;
-  }
-}
-
-function isValidUuid(uuid: string): boolean {
-  const uuidRegex = new RegExp(
-    '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
-  );
-  return uuidRegex.test(uuid);
-}
-
-function getUnderoofScanResult(data: string): UnderoofQrScanResult | null {
-  try {
-    const parsed = data.split(':');
-    if (parsed.length !== 2) {
-      return null;
-    }
-
-    const [saleUuid, ticketCode] = parsed;
-    if (
-      isValidUuid(saleUuid) &&
-      typeof ticketCode === 'string' &&
-      typeof saleUuid === 'string'
-    ) {
-      return {
-        saleUuid,
-        ticketCode,
-      };
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-}
+const COUNTDOWN_DURATION_MS = 3000;
+const COUNTDOWN_INTERVAL_MS = 30;
 
 export default function QrScanScreen() {
-  const [hasPermission, setHasPermission] = useState(false);
-  const [scanned, setScanned] = useState(false);
+  const authContext = useContext(AuthContext);
 
-  useEffect(() => {
-    (async () => {
-      const status = await requestCameraPermission();
-      setHasPermission(status === 'granted');
-    })();
-  }, []);
+  const [result, setResult] = useState<CheckTicketResult | null>(null);
+  const [status, setStatus] = useState<'ok' | 'warn' | 'error' | 'pending'>(
+    'pending',
+  );
 
-  const handleBarCodeScanned = (event: BarCodeReadEvent) => {
-    const {type, data} = event;
-    console.log('Scanned: ', type, data);
-    const underoofScanResult = getUnderoofScanResult(data);
-    if (underoofScanResult) {
-      setScanned(true);
-      Alert.alert(`Underoof code: ${underoofScanResult.ticketCode}`);
+  const startingCount = COUNTDOWN_DURATION_MS / COUNTDOWN_INTERVAL_MS;
+  const [count, {startCountdown, stopCountdown, resetCountdown}] = useCountdown(
+    {
+      countStart: startingCount,
+      intervalMs: COUNTDOWN_INTERVAL_MS,
+      countStop: 0,
+    },
+  );
+
+  const getBgColor = () => {
+    switch (status) {
+      case 'ok':
+        return colors.green;
+      case 'warn':
+        return colors.yellow;
+      case 'error':
+        return colors.red;
+      case 'pending':
+        return colors.mediumGrey;
     }
   };
 
+  useEffect(() => {
+    setStatus(getStatusFromResult(result));
+  }, [result]);
+
+  useEffect(() => {
+    startCountdown();
+  }, []);
+
+  useEffect(() => {
+    if (count <= 0) {
+      setResult(null);
+      stopCountdown();
+    }
+  }, [count]);
+
   return (
-    <Screen>
-      {hasPermission ? (
-        <RNCamera
-          captureAudio={false}
-          ref={ref => {
-            // @ts-ignore
-            this.camera = ref;
-          }}
-          onBarCodeRead={scanned ? undefined : handleBarCodeScanned}
-          style={{
-            flex: 1,
-            width: '100%',
-          }}></RNCamera>
-      ) : (
-        <Text>No access to camera</Text>
-      )}
+    <Screen
+      style={{
+        backgroundColor: getBgColor(),
+      }}>
+      <StatusContainer>
+        <QrStatus
+          currentCount={count}
+          startingCount={startingCount}
+          result={result}
+        />
+      </StatusContainer>
+      <UnderoofQrScanner
+        onNewScanResult={result => {
+          if (result.isErr() && isApiError(result.err)) {
+            // If is too many requests, don't show error
+            if (result.err.status === 429) {
+              return;
+            }
+          }
+          setResult(result);
+          resetCountdown();
+          startCountdown();
+        }}
+        onIdenticalScanResult={() => {
+          resetCountdown();
+          startCountdown();
+        }}
+        rememberResult={count > 0}></UnderoofQrScanner>
+      {/* <LogoutButtonContainer>
+        <LogoutButton
+          onPress={() => {
+            authContext.logout();
+          }}></LogoutButton>
+      </LogoutButtonContainer> */}
     </Screen>
   );
 }
@@ -95,7 +100,22 @@ export default function QrScanScreen() {
 const Screen = styled.SafeAreaView`
   width: 100%;
   height: 100%;
-  background-color: #fff;
+  background-color: ${colors.mediumGrey};
+  justify-content: flex-start;
+  align-items: center;
+  postion: relative;
+`;
+
+const LogoutButtonContainer = styled.View`
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+`;
+
+const StatusContainer = styled.View`
+  width: 100%;
+  height: 20%;
   justify-content: center;
+  margin-top: 0;
   align-items: center;
 `;

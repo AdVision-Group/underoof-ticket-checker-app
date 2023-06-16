@@ -56,13 +56,16 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Sora-Bold.ttf</string>
-		<string>Sora-ExtraBold.ttf</string>
-		<string>Sora-ExtraLight.ttf</string>
-		<string>Sora-Light.ttf</string>
-		<string>Sora-Medium.ttf</string>
 		<string>Sora-Regular.ttf</string>
-		<string>Sora-SemiBold.ttf</string>
-		<string>Sora-Thin.ttf</string>
+	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>underooftickets</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

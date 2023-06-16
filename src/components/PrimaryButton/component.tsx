@@ -25,7 +25,6 @@ const Button = styled.TouchableOpacity`
   background-color: ${colors.secondary};
   border-radius: ${borderRadius.medium};
   padding: 10px;
-  margin-bottom: 20px;
   width: 100%;
   color: ${colors.white};
   display: flex;

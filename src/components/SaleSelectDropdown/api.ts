@@ -1,21 +1,20 @@
 import {z} from 'zod';
-import {API_URL, NoInternetError, Unwrap, zodFetch} from '../../api';
-import {Result} from '@flagg2/result';
+import {API_URL, Unwrap, zodFetch} from '../../api';
 
 const DEFINITION_OF_CLOSE_DATE = 7;
 
-export async function fetchSalesWithCloseDate() {
-  const result = await zodFetch(
-    z.array(
+export function fetchSalesWithCloseDate() {
+  return zodFetch({
+    url: `${API_URL}/sale?happeningWithinXDays=${DEFINITION_OF_CLOSE_DATE}`,
+    method: 'get',
+    responseSchema: z.array(
       z.object({
         id: z.string(),
         eventName: z.string(),
         eventDate: z.string(),
       }),
     ),
-    `${API_URL}/sale?happeningWithinXDays=${DEFINITION_OF_CLOSE_DATE}`,
-  );
-  return result;
+  });
 }
 
 type SalesWithCloseDate = Unwrap<typeof fetchSalesWithCloseDate>;

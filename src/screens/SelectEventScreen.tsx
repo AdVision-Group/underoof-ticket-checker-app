@@ -8,9 +8,9 @@ import {
   SaleWithCloseDate,
   fetchSalesWithCloseDate,
 } from '../components/SaleSelectDropdown/api';
-import {ActivityIndicator} from 'react-native';
-import {NoInternetError, isNoInternetError} from '../api';
-import {errors} from '../strings';
+import {FetchError} from '../api';
+import LoadingScreen from './LoadingScreen';
+import PrimaryText from '../components/PrimaryText/component';
 
 export default function SelectEventScreen(props: {
   navigation: NavigationProp<any, any>;
@@ -18,20 +18,18 @@ export default function SelectEventScreen(props: {
   const {navigation} = props;
   const [salesData, setSalesData] = useState<SaleWithCloseDate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<FetchError | undefined>(undefined);
 
   function fetchSales() {
     setLoading(true);
     fetchSalesWithCloseDate().then(res => {
       if (res.isOk()) {
         setSalesData(res.value);
-        setError('');
+        setError(undefined);
         setLoading(false);
       } else {
         const err = res.err;
-        if (isNoInternetError(err)) {
-          setError(errors.noInternet);
-        }
+        setError(err);
         setTimeout(() => {
           fetchSales();
         }, 5000);
@@ -43,20 +41,24 @@ export default function SelectEventScreen(props: {
     fetchSales();
   }, []);
 
+  if (loading) {
+    return <LoadingScreen error={error} />;
+  }
+
   return (
     <HomeScreenContainer>
       <LogoContainer>
         <Logo />
       </LogoContainer>
-      {loading ? (
-        <ActivityIndicator></ActivityIndicator>
-      ) : (
-        <SaleSelectDropdown
-          onSelect={() => navigation.navigate('LoginScreen')}
-          data={salesData}
-        />
-      )}
-      {error && <ErrorText>{error}</ErrorText>}
+
+      <SaleSelectDropdown
+        onSelect={item =>
+          navigation.navigate('LoginScreen', {
+            saleId: item.id,
+          })
+        }
+        data={salesData}
+      />
     </HomeScreenContainer>
   );
 }
@@ -73,7 +75,7 @@ const LogoContainer = styled.View`
   height: 20%;
 `;
 
-const ErrorText = styled.Text`
+const ErrorText = styled(PrimaryText)`
   color: ${colors.error};
   margin-top: 20px;
 `;

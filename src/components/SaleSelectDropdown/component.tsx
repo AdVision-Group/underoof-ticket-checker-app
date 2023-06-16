@@ -1,6 +1,4 @@
-import {useEffect, useState} from 'react';
-import styled from 'styled-components/native';
-import {SaleWithCloseDate, fetchSalesWithCloseDate} from './api';
+import {SaleWithCloseDate} from './api';
 import SelectDropdown from 'react-native-select-dropdown';
 import {colors, fonts} from '../../styles';
 

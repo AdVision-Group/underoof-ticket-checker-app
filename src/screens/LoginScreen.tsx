@@ -1,36 +1,29 @@
-import {NavigationProp} from '@react-navigation/native';
-import SaleSelectDropdown from '../components/SaleSelectDropdown/component';
+import {NavigationProp, RouteProp} from '@react-navigation/native';
 import styled from 'styled-components/native';
 import {borderRadius, colors, fonts} from '../styles';
 import Logo from '../../assets/images/logo.svg';
-import {useState} from 'react';
 import PrimaryTextInput from '../components/PrimaryTextInput/component';
 import PrimaryButton from '../components/PrimaryButton/component';
+import {useContext, useState} from 'react';
+import {LoginForm} from '../components/LoginForm/component';
+import {AuthContext} from '../contextWrappers/AuthContext/context';
+import PrimaryText from '../components/PrimaryText/component';
 
 export default function LoginScreen(props: {
   navigation: NavigationProp<any, any>;
+  route: RouteProp<{params: {saleId: string}}, 'params'>;
 }) {
-  const {navigation} = props;
+  const authContext = useContext(AuthContext);
+  const {navigation, route} = props;
+  const {saleId} = route.params;
+
   return (
     <HomeScreenContainer>
       <LogoContainer>
         <Logo />
       </LogoContainer>
       <LoginText>Prihláste sa</LoginText>
-      <LoginForm>
-        <PrimaryTextInput
-          placeholder="Váš email"
-          autoComplete="email"
-          label="Email"
-          autoFocus
-        />
-        <PrimaryTextInput
-          placeholder="Heslo od organizátora"
-          autoComplete="password"
-          label="Heslo"
-        />
-        <PrimaryButton text="Prihlásiť sa" />
-      </LoginForm>
+      <LoginForm onLogin={authContext.login} saleId={saleId} />
     </HomeScreenContainer>
   );
 }
@@ -42,7 +35,7 @@ const HomeScreenContainer = styled.SafeAreaView`
   padding-bottom: 15%;
 `;
 
-const LoginText = styled.Text`
+const LoginText = styled(PrimaryText)`
   font-size: 20px;
   color: ${colors.white};
   font-family: ${fonts.regular};
@@ -52,12 +45,4 @@ const LoginText = styled.Text`
 const LogoContainer = styled.View`
   width: 60%;
   height: 20%;
-`;
-
-const LoginForm = styled.View`
-  width: 80%;
-  background-color: ${colors.darkGrey};
-  border-radius: ${borderRadius.medium};
-  padding: 20px;
-  padding-bottom: 0;
 `;

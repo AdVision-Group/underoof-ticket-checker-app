@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {TextInputProps} from 'react-native';
 import styled from 'styled-components/native';
 import {borderRadius, colors, fonts} from '../../styles';
+import PrimaryText from '../PrimaryText/component';
 
 export default function PrimaryTextInput(
   props: TextInputProps & {
@@ -46,7 +47,7 @@ const StyledTextInput = styled.TextInput.attrs({
   padding: 10px;
 `;
 
-const InputLabel = styled.Text`
+const InputLabel = styled(PrimaryText)`
   font-size: 10px;
   color: ${colors.white};
   font-family: ${fonts.regular};
